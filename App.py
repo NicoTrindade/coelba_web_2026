@@ -35,7 +35,7 @@ if uploaded_files:
             
         arquivoCSV = RELATORIO_COELBA.replace(".pdf","") + '.csv'
 
-        CAMINHO_CSV = arquivoCSV          
+        CAMINHO_CSV = r"C:/Users/NielsonTrindade/COELBA_PDF_CSV/"+arquivoCSV          
               
         reader = PdfReader(file) 
         page = reader.pages
@@ -178,7 +178,7 @@ if uploaded_files:
 
               contPag += 1
               progress.progress((i + 1) / (totalRegistros-1)/2)
-            
+                       
            if results:
               st.write("✅ Total de faturas extraídas:", len(results))
               st.success("Extração finalizada!")          
