@@ -1,6 +1,8 @@
 from funcoes import DadosRetornoCSV
 from utils.csv_to_excel import process_csv_files
 from PyPDF2 import PdfReader
+from io import StringIO
+from google_drive import process_csv_and_excel
 import streamlit as st
 import pandas as pd
 import csv
@@ -70,7 +72,11 @@ if uploaded_files:
          
            contPag = 0
            controlarPag = 0
-                  
+           
+           # Implantação nova para google Drive
+           output = StringIO()
+           writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL, delimiter=',')
+                 
            for page in reader.pages:                
             
               if (page.extract_text().find('DOCUMENTO PARA PAGAMENTO DA CONTA COLETIVA') == -1 and controlarPag == 0 and
@@ -150,26 +156,62 @@ if uploaded_files:
                  # Total a pagar
                  lista_total_pagar = DadosRetornoCSV(len('TOTAL A PAGAR R$'), page.extract_text().find('TOTAL A PAGAR R$'), page.extract_text().find('Cadastra-se e receba'), TEXTO_COMPLETO)                      
                   
-                 csv.writer(csvfile, quoting=csv.QUOTE_ALL, delimiter=',').writerow([lista_conta_contato,
-                                                                                    lista_mes_ano,
-                                                                                    lista_dados_cliente, 
-                                                                                    lista_end_unid_consum, 
-                                                                                    lista_num_nota_fiscal, 
-                                                                                    lista_num_Instalacao, 
-                                                                                    lista_classificacao, 
-                                                                                    lista_desc_nota_fiscal_gerar, 
-                                                                                    lista_desc_tarifa_gerar, 
-                                                                                    lista_inform_tributos_list_ICMS[0], 
-                                                                                    lista_inform_tributos_list_ICMS[1],
-                                                                                    lista_inform_tributos_list_ICMS[2],
-                                                                                    lista_inform_tributos_list_PIS[0],
-                                                                                    lista_inform_tributos_list_PIS[1],
-                                                                                    lista_inform_tributos_list_PIS[2],
-                                                                                    lista_inform_tributos_list_COFINS[0],
-                                                                                    lista_inform_tributos_list_COFINS[1],
-                                                                                    lista_inform_tributos_list_COFINS[2],
-                                                                                    lista_num_medidor_tratado,                                                                                 
-                                                                                    lista_total_pagar])  
+                 # Implantação nova para google Drive
+              
+                 """  writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL, delimiter=',').writerow([lista_conta_contato,
+                                                                                             lista_mes_ano,
+                                                                                             lista_dados_cliente, 
+                                                                                             lista_end_unid_consum, 
+                                                                                             lista_num_nota_fiscal, 
+                                                                                             lista_num_Instalacao, 
+                                                                                             lista_classificacao, 
+                                                                                             lista_desc_nota_fiscal_gerar, 
+                                                                                             lista_desc_tarifa_gerar, 
+                                                                                             lista_inform_tributos_list_ICMS[0], 
+                                                                                             lista_inform_tributos_list_ICMS[1],
+                                                                                             lista_inform_tributos_list_ICMS[2],
+                                                                                             lista_inform_tributos_list_PIS[0],
+                                                                                             lista_inform_tributos_list_PIS[1],
+                                                                                             lista_inform_tributos_list_PIS[2],
+                                                                                             lista_inform_tributos_list_COFINS[0],
+                                                                                             lista_inform_tributos_list_COFINS[1],
+                                                                                             lista_inform_tributos_list_COFINS[2],
+                                                                                             lista_num_medidor_tratado,                                                                                 
+                                                                                             lista_total_pagar])   """
+                 # Implantação nova para google Drive
+                 writer.writerow([lista_conta_contato,
+                                 lista_mes_ano,
+                                 lista_dados_cliente, 
+                                 lista_end_unid_consum, 
+                                 lista_num_nota_fiscal, 
+                                 lista_num_Instalacao, 
+                                 lista_classificacao, 
+                                 lista_desc_nota_fiscal_gerar, 
+                                 lista_desc_tarifa_gerar, 
+                                 lista_inform_tributos_list_ICMS[0], 
+                                 lista_inform_tributos_list_ICMS[1],
+                                 lista_inform_tributos_list_ICMS[2],
+                                 lista_inform_tributos_list_PIS[0],
+                                 lista_inform_tributos_list_PIS[1],
+                                 lista_inform_tributos_list_PIS[2],
+                                 lista_inform_tributos_list_COFINS[0],
+                                 lista_inform_tributos_list_COFINS[1],
+                                 lista_inform_tributos_list_COFINS[2],
+                                 lista_num_medidor_tratado,                                                                                 
+                                 lista_total_pagar])
+
+                 csv_string = output.getvalue()
+                 csv_bytes = csv_string.encode("utf-8")
+
+                 CSV_FOLDER_ID = "PASTA_CSV"
+                 EXCEL_FOLDER_ID = "PASTA_EXCEL"
+
+                 csv_link, excel_link = process_csv_and_excel(
+                                                               csv_bytes=csv_bytes,
+                                                               file_name="relatorio.csv",
+                                                               csv_folder=CSV_FOLDER_ID,
+                                                               excel_folder=EXCEL_FOLDER_ID
+                                                             )
                      
                  controlarPag += 1
                  results.append("Ok")               
@@ -183,8 +225,11 @@ if uploaded_files:
               st.write("✅ Total de faturas extraídas:", len(results))
               st.success("Extração finalizada!")          
 
+           st.success("Arquivos enviados com sucesso!")
+           st.markdown(f"📄 CSV: [Abrir]({csv_link})")
+           st.markdown(f"📊 Excel: [Abrir]({excel_link})")
 
-csv_uploaded_files = st.file_uploader(
+""" csv_uploaded_files = st.file_uploader(
     "Selecione os CSVs",
     type="csv",
     accept_multiple_files=True
@@ -199,5 +244,5 @@ if st.button("Gerar Excel consolidado"):
         data=excel_data,
         file_name="consolidado.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    ) """
 
