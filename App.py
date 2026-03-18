@@ -203,8 +203,8 @@ if uploaded_files:
                  csv_string = output.getvalue()
                  csv_bytes = csv_string.encode("utf-8")
 
-                 CSV_FOLDER_ID = "APP_COELBA_WEB_2026/PASTA_CSV"
-                 EXCEL_FOLDER_ID = "APP_COELBA_WEB_2026/PASTA_EXCEL"
+                 CSV_FOLDER_ID = "https://drive.google.com/drive/folders/1yUMrkdAVCyDOKTZBgCJswX9-5RyzMXJk?usp=drive_link"
+                 EXCEL_FOLDER_ID = "https://drive.google.com/drive/folders/1DHhyClzxO_pk6UXD7bf6sROkJ695e0bd?usp=drive_link"
 
                  csv_link, excel_link = process_csv_and_excel(
                                                                csv_bytes=csv_bytes,
