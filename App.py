@@ -225,24 +225,6 @@ if uploaded_files:
               st.write("✅ Total de faturas extraídas:", len(results))
               st.success("Extração finalizada!")          
 
-           st.success("Arquivos enviados com sucesso!")
-           st.markdown(f"📄 CSV: [Abrir]({csv_link})")
-           st.markdown(f"📊 Excel: [Abrir]({excel_link})")
-
-""" csv_uploaded_files = st.file_uploader(
-    "Selecione os CSVs",
-    type="csv",
-    accept_multiple_files=True
-)
-
-if st.button("Gerar Excel consolidado"):
-
-    excel_data = process_csv_files(csv_uploaded_files)
-
-    st.download_button(
-        label="Baixar Excel",
-        data=excel_data,
-        file_name="consolidado.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    ) """
-
+              st.success("Arquivos enviados com sucesso!")
+              st.markdown(f"📄 CSV: [Abrir]({csv_link})")
+              st.markdown(f"📊 Excel: [Abrir]({excel_link})")
