@@ -35,7 +35,7 @@ if uploaded_files:
             
         arquivoCSV = RELATORIO_COELBA.replace(".pdf","") + '.csv'
 
-        CAMINHO_CSV = r"C:/Users/NielsonTrindade/COELBA_PDF_CSV/"+arquivoCSV          
+        CAMINHO_CSV = arquivoCSV          
               
         reader = PdfReader(file) 
         page = reader.pages
