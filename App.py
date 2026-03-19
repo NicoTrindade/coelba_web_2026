@@ -228,6 +228,6 @@ if uploaded_files:
              st.write("✅ Total de faturas extraídas:", len(results))
              st.success("Extração finalizada!")          
 
-             st.success("Arquivos enviados com sucesso!")
+             """   st.success("Arquivos enviados com sucesso!")
              st.markdown(f"📄 CSV: [Abrir]({csv_link})")
-             st.markdown(f"📊 Excel: [Abrir]({excel_link})")
+             st.markdown(f"📊 Excel: [Abrir]({excel_link})") """
