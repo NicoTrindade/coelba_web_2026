@@ -210,7 +210,7 @@ if uploaded_files:
              contPag += 1
              progress.progress((i + 1) / (totalRegistros-1)/2)
 
-          csv_string = output.getvalue()
+          """  csv_string = output.getvalue()
           csv_bytes = csv_string.encode("utf-8")
 
           CSV_FOLDER_ID = "1r6DtkBXm7TZyBOKnwE4tG_-j02N5V5VX"
@@ -222,7 +222,7 @@ if uploaded_files:
                                                       file_name="relatorio.csv",
                                                       csv_folder=CSV_FOLDER_ID,
                                                       excel_folder=EXCEL_FOLDER_ID
-                                                      )
+                                                      ) """
 
           if results:
              st.write("✅ Total de faturas extraídas:", len(results))
