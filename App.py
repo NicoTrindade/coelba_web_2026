@@ -76,7 +76,7 @@ if uploaded_files:
         output = StringIO()
 
         # escreve header na memória
-        writer = csv.writer(output, quoting=csv.QUOTE_ALL, delimiter=',')                          
+        #writer = csv.writer(output, quoting=csv.QUOTE_ALL, delimiter=',')                          
             
         for page in reader.pages:                
       
@@ -158,8 +158,8 @@ if uploaded_files:
               lista_total_pagar = DadosRetornoCSV(len('TOTAL A PAGAR R$'), page.extract_text().find('TOTAL A PAGAR R$'), page.extract_text().find('Cadastra-se e receba'), TEXTO_COMPLETO)                      
             
               # Implantação nova para google Drive
-         
-              """  writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL, delimiter=',').writerow([lista_conta_contato,
+             #write =
+              csv.writer(output, quoting=csv.QUOTE_ALL, delimiter=',').writerow([lista_conta_contato,
                                                                                        lista_mes_ano,
                                                                                        lista_dados_cliente, 
                                                                                        lista_end_unid_consum, 
@@ -178,9 +178,9 @@ if uploaded_files:
                                                                                        lista_inform_tributos_list_COFINS[1],
                                                                                        lista_inform_tributos_list_COFINS[2],
                                                                                        lista_num_medidor_tratado,                                                                                 
-                                                                                       lista_total_pagar])   """
+                                                                                       lista_total_pagar])  
               # Implantação nova para google Drive
-              writer.writerow([lista_conta_contato,
+              """  writer.writerow([lista_conta_contato,
                            lista_mes_ano,
                            lista_dados_cliente, 
                            lista_end_unid_consum, 
@@ -199,7 +199,7 @@ if uploaded_files:
                            lista_inform_tributos_list_COFINS[1],
                            lista_inform_tributos_list_COFINS[2],
                            lista_num_medidor_tratado,                                                                                 
-                           lista_total_pagar])
+                           lista_total_pagar]) """
             
                
               controlarPag += 1
