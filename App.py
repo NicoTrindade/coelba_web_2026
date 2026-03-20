@@ -4,6 +4,7 @@ import io
 import pdfplumber
 import pickle
 import os
+import json
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from funcoes import DadosRetornoCSV
@@ -12,7 +13,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
 # --- CONFIGURAÇÕES DA API ---
-SCOPES = ['https://www.googleapis.com/auth/drive']
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
 PASTA_CSV_ID = '1r6DtkBXm7TZyBOKnwE4tG_-j02N5V5VX'                
 PASTA_XLSX_ID = '13ifqsQjGl2_M-VoOxTMtJI0JvIsDrwhy'
 
@@ -27,8 +28,14 @@ def autenticar_drive():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'client_secrets.json', SCOPES)
+            
+            # lê o dicionário dos secrets do Streamlit
+           # Carrega as configurações diretamente do segredo que você colou
+            client_config = {"web": st.secrets["google_oauth_client"]}
+            
+            # Cria o fluxo de autenticação usando o dicionário, não o arquivo
+            flow = InstalledAppFlow.from_client_config(client_config, SCOPES)                  
+
             # Isso abrirá uma aba no seu navegador para você logar na sua conta de 200GB
             creds = flow.run_local_server(port=0)
         
