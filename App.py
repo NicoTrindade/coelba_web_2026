@@ -20,10 +20,15 @@ def autenticar_drive():
 
 def upload_para_drive(service, nome_arquivo, conteudo, pasta_id, mimetype):
     try:
+        # Se for CSV, vamos converter para Google Sheets para evitar o erro de cota
         file_metadata = {
-            'name': nome_arquivo,
+            'name': nome_arquivo.replace('.csv', ''), 
             'parents': [pasta_id]
         }
+        
+        # O segredo: converter para o formato nativo do Google
+        if mimetype == 'text/csv':
+            file_metadata['mimeType'] = 'application/vnd.google-apps.spreadsheet'
 
         media = MediaIoBaseUpload(
             conteudo, 
@@ -31,18 +36,18 @@ def upload_para_drive(service, nome_arquivo, conteudo, pasta_id, mimetype):
             resumable=True
         )
 
-        # O parâmetro entra aqui, logo após o media_body
+        # Criar o arquivo
         file = service.files().create(
             body=file_metadata,
             media_body=media,
             fields='id',
-            supportsAllDrives=True,
-            keepRevisionForever=False  # <--- INSERIDO AQUI
+            supportsAllDrives=True
         ).execute()
 
         return file.get('id')
     except Exception as e:
-        st.error(f"Erro no upload: {e}")
+        # Se falhar, tentamos sem a conversão, mas com o supportsAllDrives
+        st.error(f"Erro persistente de cota: {e}")
         return None
 
 # --- SUA LÓGICA DE EXTRAÇÃO ADAPTADA ---
