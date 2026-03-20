@@ -107,10 +107,10 @@ def processar_pdfs(uploaded_files):
                 
                     # Tarifas Aplicadas          
                     lista_desc_tarifa_separados = []
-                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[0])
-                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[9])
-                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[10])
-                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[19])
+                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[0] if len(lista_desc_nota_fiscal_tratado_list[0])>0 else "")
+                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[9] if len(lista_desc_nota_fiscal_tratado_list[9])>0 else "")
+                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[10] if len(lista_desc_nota_fiscal_tratado_list[10])>0 else "")
+                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[19] if len(lista_desc_nota_fiscal_tratado_list[19])>0 else "")
                 
                     lista_desc_tarifa_gerar = ""
                     for lista_separados in lista_desc_tarifa_separados:
