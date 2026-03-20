@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import io
 import pdfplumber
+import pickle
+import os
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
 from funcoes import DadosRetornoCSV
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -13,9 +17,24 @@ PASTA_CSV_ID = '1r6DtkBXm7TZyBOKnwE4tG_-j02N5V5VX'
 PASTA_XLSX_ID = '13ifqsQjGl2_M-VoOxTMtJI0JvIsDrwhy'
 
 def autenticar_drive():
-    creds = service_account.Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"], scopes=SCOPES
-    )
+    creds = None
+    # O arquivo token.pickle salva seu login para não pedir toda hora
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            creds = pickle.load(token)
+            
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'client_secrets.json', SCOPES)
+            # Isso abrirá uma aba no seu navegador para você logar na sua conta de 200GB
+            creds = flow.run_local_server(port=0)
+        
+        with open('token.pickle', 'wb') as token:
+            pickle.dump(creds, token)
+
     return build('drive', 'v3', credentials=creds)
 
 def upload_para_drive(service, nome_arquivo, conteudo, pasta_id, mimetype):
