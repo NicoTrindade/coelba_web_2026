@@ -19,10 +19,37 @@ def autenticar_drive():
     return build('drive', 'v3', credentials=creds)
 
 def upload_para_drive(service, nome_arquivo, conteudo, pasta_id, mimetype):
-    file_metadata = {'name': nome_arquivo, 'parents': [pasta_id]}
-    media = MediaIoBaseUpload(conteudo, mimetype=mimetype, resumable=True)
-    file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-    return file.get('id')
+    """
+    Faz o upload de um arquivo para o Google Drive utilizando um buffer de memória.
+    O parâmetro supportsAllDrives=True resolve o erro de 'Service Accounts do not have storage quota'.
+    """
+    try:
+        # 1. Definir os metadados do arquivo (Nome e Pasta de Destino)
+        file_metadata = {
+            'name': nome_arquivo,
+            'parents': [pasta_id]
+        }
+
+        # 2. Preparar o conteúdo (vindo de um BytesIO)
+        media = MediaIoBaseUpload(
+            conteudo, 
+            mimetype=mimetype, 
+            resumable=True
+        )
+
+        # 3. Executar a criação do arquivo na API
+        file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id',
+            supportsAllDrives=True  # <-- ISSO CORRIGE O ERRO DE COTA (403)
+        ).execute()
+
+        return file.get('id')
+
+    except Exception as e:
+        print(f"Erro ao fazer upload do arquivo {nome_arquivo}: {e}")
+        return None
 
 # --- SUA LÓGICA DE EXTRAÇÃO ADAPTADA ---
 def DadosRetornoCSV(tamanho_label, pos_inicio, pos_fim, texto_completo):
