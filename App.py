@@ -20,23 +20,18 @@ def autenticar_drive():
 
 def upload_para_drive(service, nome_arquivo, conteudo, pasta_id, mimetype):
     try:
-        # Se for CSV, vamos converter para Google Sheets para evitar o erro de cota
         file_metadata = {
-            'name': nome_arquivo.replace('.csv', ''), 
+            'name': nome_arquivo,
             'parents': [pasta_id]
         }
-        
-        # O segredo: converter para o formato nativo do Google
+
+        # Em contas pessoais, converter CSV para Google Sheets ajuda a não ocupar cota
         if mimetype == 'text/csv':
             file_metadata['mimeType'] = 'application/vnd.google-apps.spreadsheet'
 
-        media = MediaIoBaseUpload(
-            conteudo, 
-            mimetype=mimetype, 
-            resumable=True
-        )
+        media = MediaIoBaseUpload(conteudo, mimetype=mimetype, resumable=True)
 
-        # Criar o arquivo
+        # 1. Cria o arquivo
         file = service.files().create(
             body=file_metadata,
             media_body=media,
@@ -44,9 +39,27 @@ def upload_para_drive(service, nome_arquivo, conteudo, pasta_id, mimetype):
             supportsAllDrives=True
         ).execute()
 
-        return file.get('id')
+        file_id = file.get('id')
+
+        # 2. TRUQUE DE MESTRE: Transferir a propriedade para o seu e-mail pessoal
+        # Isso faz com que o arquivo use os SEUS 15GB e não os 0GB da Service Account
+        permission = {
+            'type': 'user',
+            'role': 'owner',
+            'emailAddress': 'nicoctrindade@gmail.com' # <--- COLOQUE SEU EMAIL AQUI
+        }
+        
+        # O parâmetro transferOwnership=True é o que resolve o problema de cota
+        service.permissions().create(
+            fileId=file_id,
+            body=permission,
+            transferOwnership=True,
+            supportsAllDrives=True
+        ).execute()
+
+        return file_id
+
     except Exception as e:
-        # Se falhar, tentamos sem a conversão, mas com o supportsAllDrives
         st.error(f"Erro persistente de cota: {e}")
         return None
 
