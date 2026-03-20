@@ -55,97 +55,77 @@ def DadosRetornoCSV(tamanho_label, pos_inicio, pos_fim, texto_completo):
 
 def processar_pdfs(uploaded_files):
     dados_finais = []
-    
-    # Barra de progresso do Streamlit
     progress_bar = st.progress(0)
     total_files = len(uploaded_files)
 
+    # FUNÇÃO AUXILIAR DE SEGURANÇA
+    def get_val(lista, index):
+        """Retorna o valor da lista no índice informado ou vazio se não existir"""
+        try:
+            return lista[index]
+        except IndexError:
+            return ""
+
     for idx, pdf_file in enumerate(uploaded_files):
         with pdfplumber.open(pdf_file) as pdf:
-            controlarPag = 0 # Sua variável de controle
+            controlarPag = 0
             
-            for page in pdf.pages:              
-                if not page.extract_text(): continue
+            for page in pdf.pages:
+                texto_da_pagina = page.extract_text()
+                if not texto_da_pagina: continue
 
-                # Implementação da sua lógica de filtros
-                if (page.extract_text().find('DOCUMENTO PARA PAGAMENTO DA CONTA COLETIVA') == -1 and controlarPag == 0 and
-                    page.extract_text().find('Fale com a gente! | Nossos Canais de Atendimento') == -1 and
-                    page.extract_text().find('TELEATENDIMENTO: Emergencial 116') == -1 and
-                    page.extract_text().find('DIC, FIC, DMIC e DICRI') == -1):
-                                
-                    TEXTO_COMPLETO = page.extract_text()   
-
-                    # Dados do cliente
-                    lista_dados_cliente = DadosRetornoCSV(len('NOME DO CLIENTE:'), page.extract_text().find('NOME DO CLIENTE:'), page.extract_text().find('ENDEREÇO:'), TEXTO_COMPLETO)            
-
-                    # Endereço Unidade Consumidora
-                    lista_end_unid_consum = DadosRetornoCSV(len('ENDEREÇO:'), page.extract_text().find('ENDEREÇO:'), page.extract_text().find('CÓDIGO DA')+1, TEXTO_COMPLETO)  # +1 por conta do caractér especial, pois, não está considerando ara contagem      
-
-                    # Número da Nota Fiscal
-                    lista_num_nota_fiscal = DadosRetornoCSV(len('NOTA FISCAL N°'), page.extract_text().find('NOTA FISCAL N°'), page.extract_text().find('- SÉRIE'), TEXTO_COMPLETO)          
-                
-                    # Nº da Instlação
-                    lista_num_Instalacao = DadosRetornoCSV(len('INSTALAÇÃO'), page.extract_text().find('INSTALAÇÃO'), page.extract_text().find('CÓDIGO DO CLIENTE'), TEXTO_COMPLETO)                      
-                
-                    # Classificação
-                    lista_classificacao = DadosRetornoCSV(len('CLASSIFICAÇÃO:'), page.extract_text().find('CLASSIFICAÇÃO:'), page.extract_text().find('TIPO DE FORNECIMENTO:'), TEXTO_COMPLETO)          
-
-                    # Descrição da Nota Fiscal
+                if (texto_da_pagina.find('DOCUMENTO PARA PAGAMENTO DA CONTA COLETIVA') == -1 and controlarPag == 0 and
+                    texto_da_pagina.find('Fale com a gente! | Nossos Canais de Atendimento') == -1 and
+                    texto_da_pagina.find('TELEATENDIMENTO: Emergencial 116') == -1 and
+                    texto_da_pagina.find('DIC, FIC, DMIC e DICRI') == -1):
                     
-                    if page.extract_text().find('neoenergiacoelba.com.br') > 0:
-                        lista_desc_nota_fiscal = DadosRetornoCSV(0, 0, page.extract_text().find('neoenergiacoelba.com.br'), TEXTO_COMPLETO)
+                    TEXTO_COMPLETO = texto_da_pagina
+
+                    # ... (suas extrações de cliente, endereço, etc permanecem iguais)
+                    lista_dados_cliente = DadosRetornoCSV(len('NOME DO CLIENTE:'), texto_da_pagina.find('NOME DO CLIENTE:'), texto_da_pagina.find('ENDEREÇO:'), TEXTO_COMPLETO)
+                    lista_end_unid_consum = DadosRetornoCSV(len('ENDEREÇO:'), texto_da_pagina.find('ENDEREÇO:'), texto_da_pagina.find('CÓDIGO DA')+1, TEXTO_COMPLETO)
+                    lista_num_nota_fiscal = DadosRetornoCSV(len('NOTA FISCAL N°'), texto_da_pagina.find('NOTA FISCAL N°'), texto_da_pagina.find('- SÉRIE'), TEXTO_COMPLETO)
+                    lista_num_Instalacao = DadosRetornoCSV(len('INSTALAÇÃO'), texto_da_pagina.find('INSTALAÇÃO'), texto_da_pagina.find('CÓDIGO DO CLIENTE'), TEXTO_COMPLETO)
+                    lista_classificacao = DadosRetornoCSV(len('CLASSIFICAÇÃO:'), texto_da_pagina.find('CLASSIFICAÇÃO:'), texto_da_pagina.find('TIPO DE FORNECIMENTO:'), TEXTO_COMPLETO)
+
+                    # TRATAMENTO DA DESCRIÇÃO E TARIFAS (PONTO DE ERRO)
+                    if texto_da_pagina.find('neoenergiacoelba.com.br') > 0:
+                        lista_desc_nota_fiscal = DadosRetornoCSV(0, 0, texto_da_pagina.find('neoenergiacoelba.com.br'), TEXTO_COMPLETO)
                     else:
-                        lista_desc_nota_fiscal = DadosRetornoCSV(0, 0, page.extract_text().find('www.neoenergia.com'), TEXTO_COMPLETO)
+                        lista_desc_nota_fiscal = DadosRetornoCSV(0, 0, texto_da_pagina.find('www.neoenergia.com'), TEXTO_COMPLETO)
 
-                    lista_desc_nota_fiscal_tratado = " ".join(lista_desc_nota_fiscal.split()) # Retrar os espaços entre as palavras
-                    lista_desc_nota_fiscal_tratado_list = lista_desc_nota_fiscal_tratado.split(" ") # Converter em lista                            
-                            
-                    lista_desc_nota_fiscal_gerar = ""
-
-                    for lista_separados in lista_desc_nota_fiscal_tratado_list:
-                        lista_desc_nota_fiscal_gerar = lista_desc_nota_fiscal_gerar + " " + lista_separados
-                
-                    # Tarifas Aplicadas          
-                    lista_desc_tarifa_separados = []
-                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[0] if len(lista_desc_nota_fiscal_tratado_list[0])>0 else "")
-                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[9] if len(lista_desc_nota_fiscal_tratado_list[9])>0 else "")
-                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[10] if len(lista_desc_nota_fiscal_tratado_list[10])>0 else "")
-                    lista_desc_tarifa_separados.append(lista_desc_nota_fiscal_tratado_list[19] if len(lista_desc_nota_fiscal_tratado_list[19])>0 else "")
-                
-                    lista_desc_tarifa_gerar = ""
-                    for lista_separados in lista_desc_tarifa_separados:
-                        lista_desc_tarifa_gerar = lista_desc_tarifa_gerar + " " + lista_separados
-                
-                    # Informações de Tributos            
-                    lista_inform_tributos_ICMS = DadosRetornoCSV(len('ICMS'), page.extract_text().find('ICMS'), page.extract_text().find('CONSUMO / kWh'), TEXTO_COMPLETO)          
-                    lista_inform_tributos_ICMS_tratado = " ".join(lista_inform_tributos_ICMS.split()) # Retrar os espaços entre as palavras      
-                    lista_inform_tributos_list_ICMS = lista_inform_tributos_ICMS_tratado.split(" ") # Converter em lista                            
-
-                    lista_inform_tributos_PIS = DadosRetornoCSV(len('(%) PIS'), page.extract_text().find('(%) PIS'), page.extract_text().find('COFINS'), TEXTO_COMPLETO)          
-                    lista_inform_tributos_PIS_tratado = " ".join(lista_inform_tributos_PIS.split()) # Retrar os espaços entre as palavras      
-                    lista_inform_tributos_list_PIS = lista_inform_tributos_PIS_tratado.split(" ") # Converter em lista   
-
-                    lista_inform_tributos_COFINS = DadosRetornoCSV(len('COFINS'), page.extract_text().find('COFINS'), page.extract_text().find('ICMS'), TEXTO_COMPLETO)          
-                    lista_inform_tributos_COFINS_tratado = " ".join(lista_inform_tributos_COFINS.split()) # Retrar os espaços entre as palavras      
-                    lista_inform_tributos_list_COFINS = lista_inform_tributos_COFINS_tratado.split(" ") # Converter em lista                         
-
-                    # Número do Medidor              
-                    if page.extract_text().find('MEDIDOR kWh') > 0 and page.extract_text().find('Energia Ativa') > 0:
-                        lista_num_medidor_tratado = DadosRetornoCSV(len('MEDIDOR kWh'), page.extract_text().find('MEDIDOR kWh'), page.extract_text().find('Energia Ativa'), TEXTO_COMPLETO)
-                        # lista_num_medidor_tratado = lista_num_medidor.replace('(kWh)','').strip()
-                    else:
-                        lista_num_medidor_tratado = ""
+                    lista_desc_nota_fiscal_tratado = " ".join(lista_desc_nota_fiscal.split())
+                    lista_desc_nota_fiscal_tratado_list = lista_desc_nota_fiscal_tratado.split(" ")
                     
-                    lista_conta_contato = DadosRetornoCSV(len('CÓDIGO DO CLIENTE'), page.extract_text().find('CÓDIGO DO CLIENTE'), page.extract_text().find(' DATAS DE LEITURAS'), TEXTO_COMPLETO)
-                    lista_conta_contato = lista_conta_contato.replace(".","")
-            
-                    # Mês Ano
-                    lista_mes_ano = DadosRetornoCSV(len('MÊS/ANO'), page.extract_text().find('MÊS/ANO'), page.extract_text().find('VENCIMENTO')+1, TEXTO_COMPLETO) 
-                
-                    # Total a pagar
-                    lista_total_pagar = DadosRetornoCSV(len('TOTAL A PAGAR R$'), page.extract_text().find('TOTAL A PAGAR R$'), page.extract_text().find('Cadastra-se e receba'), TEXTO_COMPLETO)                      
+                    # Monta a string de tarifas com segurança
+                    tarifas = [
+                        get_val(lista_desc_nota_fiscal_tratado_list, 0),
+                        get_val(lista_desc_nota_fiscal_tratado_list, 9),
+                        get_val(lista_desc_nota_fiscal_tratado_list, 10),
+                        get_val(lista_desc_nota_fiscal_tratado_list, 19)
+                    ]
+                    lista_desc_tarifa_gerar = " ".join(tarifas)
 
-                    # Organizando na lista de resultados (Equivalente ao seu writer.writerow)
+                    # TRIBUTOS (PONTO DE ERRO)
+                    # ICMS
+                    raw_icms = DadosRetornoCSV(len('ICMS'), texto_da_pagina.find('ICMS'), texto_da_pagina.find('CONSUMO / kWh'), TEXTO_COMPLETO)
+                    lista_inform_tributos_list_ICMS = " ".join(raw_icms.split()).split(" ")
+                    
+                    # PIS
+                    raw_pis = DadosRetornoCSV(len('(%) PIS'), texto_da_pagina.find('(%) PIS'), texto_da_pagina.find('COFINS'), TEXTO_COMPLETO)
+                    lista_inform_tributos_list_PIS = " ".join(raw_pis.split()).split(" ")
+
+                    # COFINS
+                    raw_cofins = DadosRetornoCSV(len('COFINS'), texto_da_pagina.find('COFINS'), texto_da_pagina.find('ICMS'), TEXTO_COMPLETO)
+                    lista_inform_tributos_list_COFINS = " ".join(raw_cofins.split()).split(" ")
+
+                    # ... (medidor, mes_ano, total_pagar)
+                    lista_num_medidor_tratado = DadosRetornoCSV(len('MEDIDOR kWh'), texto_da_pagina.find('MEDIDOR kWh'), texto_da_pagina.find('Energia Ativa'), TEXTO_COMPLETO) if texto_da_pagina.find('MEDIDOR kWh') > 0 else ""
+                    lista_conta_contato = DadosRetornoCSV(len('CÓDIGO DO CLIENTE'), texto_da_pagina.find('CÓDIGO DO CLIENTE'), texto_da_pagina.find(' DATAS DE LEITURAS'), TEXTO_COMPLETO).replace(".", "")
+                    lista_mes_ano = DadosRetornoCSV(len('MÊS/ANO'), texto_da_pagina.find('MÊS/ANO'), texto_da_pagina.find('VENCIMENTO')+1, TEXTO_COMPLETO) 
+                    lista_total_pagar = DadosRetornoCSV(len('TOTAL A PAGAR R$'), texto_da_pagina.find('TOTAL A PAGAR R$'), texto_da_pagina.find('Cadastra-se e receba'), TEXTO_COMPLETO)
+
+                    # ADICIONANDO AO DICIONÁRIO COM get_val (SEGURANÇA TOTAL)
                     dados_finais.append({
                         "Conta Contrato": lista_conta_contato,
                         "Mês Ano": lista_mes_ano,
@@ -154,22 +134,22 @@ def processar_pdfs(uploaded_files):
                         "Número da Nota Fiscal": lista_num_nota_fiscal,
                         "Número da Instalação": lista_num_Instalacao,
                         "Classificação": lista_classificacao,
-                        "Descrição da Nota Fiscal": lista_desc_nota_fiscal_gerar,
+                        "Descrição da Nota Fiscal": " ".join(lista_desc_nota_fiscal_tratado_list),
                         "Tarifas Aplicadas": lista_desc_tarifa_gerar,
-                        "ICMS Base de Cálculo": lista_inform_tributos_list_ICMS[0] if len(lista_inform_tributos_list_ICMS[0])>0 else "",
-                        "ICMS Base 2": lista_inform_tributos_list_ICMS[1] if len(lista_inform_tributos_list_ICMS[1])>0 else "",
-                        "ICMS Base 3": lista_inform_tributos_list_ICMS[2] if len(lista_inform_tributos_list_ICMS[2])>0 else "",
-                        "ICMS Base 4": lista_inform_tributos_list_PIS[0] if len(lista_inform_tributos_list_PIS[0])>0 else "",
-                        "ICMS Base 5": lista_inform_tributos_list_PIS[1] if len(lista_inform_tributos_list_PIS[1])>0 else "",
-                        "ICMS Base 6": lista_inform_tributos_list_PIS[2] if len(lista_inform_tributos_list_PIS[2])>0 else "",
-                        "ICMS Base 7": lista_inform_tributos_list_COFINS[0] if len(lista_inform_tributos_list_COFINS[0])>0 else "",
-                        "ICMS Base 8": lista_inform_tributos_list_COFINS[1] if len(lista_inform_tributos_list_COFINS[1])>0 else "",
-                        "ICMS Base 9": lista_inform_tributos_list_COFINS[2] if len(lista_inform_tributos_list_COFINS[2])>0 else "",
+                        "ICMS Base de Cálculo": get_val(lista_inform_tributos_list_ICMS, 0),
+                        "ICMS Base 2": get_val(lista_inform_tributos_list_ICMS, 1),
+                        "ICMS Base 3": get_val(lista_inform_tributos_list_ICMS, 2),
+                        "ICMS Base 4": get_val(lista_inform_tributos_list_PIS, 0),
+                        "ICMS Base 5": get_val(lista_inform_tributos_list_PIS, 1),
+                        "ICMS Base 6": get_val(lista_inform_tributos_list_PIS, 2),
+                        "ICMS Base 7": get_val(lista_inform_tributos_list_COFINS, 0),
+                        "ICMS Base 8": get_val(lista_inform_tributos_list_COFINS, 1),
+                        "ICMS Base 9": get_val(lista_inform_tributos_list_COFINS, 2),
                         "Número do medidor": lista_num_medidor_tratado,
-                        "Total a pagar": lista_total_pagar                     
-                    })                                                                                                                                                                                                        
+                        "Total a pagar": lista_total_pagar                                      
+                    })                                                                                                                                                                                                                                                                                             
                     controlarPag += 1
-                elif page.extract_text().find('DOCUMENTO PARA PAGAMENTO DA CONTA COLETIVA') == -1 and controlarPag == 1:
+                elif texto_da_pagina.find('DOCUMENTO PARA PAGAMENTO DA CONTA COLETIVA') == -1 and controlarPag == 1:
                     controlarPag = 0
         
         progress_bar.progress((idx + 1) / total_files)
