@@ -147,7 +147,7 @@ def processar_pdfs(uploaded_files):
 
                     # Organizando na lista de resultados (Equivalente ao seu writer.writerow)
                     dados_finais.append({
-                        "Conta Contrato": lista_dados_cliente,
+                        "Conta Contrato": lista_conta_contato,
                         "Mês Ano": lista_mes_ano,
                         "Dados do cliente": lista_dados_cliente,
                         "Endereço da Unidade Consumidora": lista_end_unid_consum,
