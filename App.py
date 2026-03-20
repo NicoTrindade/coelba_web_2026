@@ -135,8 +135,8 @@ def processar_pdfs(uploaded_files):
                         # lista_num_medidor_tratado = lista_num_medidor.replace('(kWh)','').strip()
                     else:
                         lista_num_medidor_tratado = ""
-                        lista_conta_contato = DadosRetornoCSV(len('CÓDIGO DO CLIENTE'), page.extract_text().find('CÓDIGO DO CLIENTE'), page.extract_text().find(' DATAS DE LEITURAS'), TEXTO_COMPLETO)
-
+                    
+                    lista_conta_contato = DadosRetornoCSV(len('CÓDIGO DO CLIENTE'), page.extract_text().find('CÓDIGO DO CLIENTE'), page.extract_text().find(' DATAS DE LEITURAS'), TEXTO_COMPLETO)
                     lista_conta_contato = lista_conta_contato.replace(".","")
             
                     # Mês Ano
