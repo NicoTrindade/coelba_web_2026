@@ -41,10 +41,9 @@ def autenticar_drive():
         flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
         
         # Usamos a porta 8080 para evitar conflito com o Streamlit (8501)
-        creds = flow.run_local_server(
+        creds = flow.run_console(
             port=8080, 
-            open_browser=False,
-            authorization_prompt_message="COPIE ESTE LINK: {url}"
+            open_browser=False
         )
         
         # SALVAMENTO FORÇADO
@@ -53,9 +52,7 @@ def autenticar_drive():
         st.success("Arquivo token.pickle criado com sucesso! Reinicie o app.")
 
     except Exception as e:
-        st.error(f"Erro detalhado: {e}")
-    
-    return creds
+        st.error(f"Erro detalhado: {e}")        
 
 def upload_para_drive(service, nome_arquivo, conteudo, pasta_id, mimetype):
     try:
