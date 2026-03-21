@@ -5,6 +5,7 @@ import pdfplumber
 import pickle
 import os
 import json
+import ssl
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from funcoes import DadosRetornoCSV
@@ -12,37 +13,49 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
+# Isso ajuda a evitar o erro de SSL em algumas máquinas Windows
+"""os.environ['PYTHONHTTPSVERIFY'] = '0'
+if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)):
+    ssl._create_default_https_context = ssl._create_unverified_context
+"""
+# ISSO AQUI DESATIVA A VERIFICAÇÃO RIGOROSA DE SSL QUE ESTÁ DANDO ERRO
+os.environ['CURL_CA_BUNDLE'] = ''
+ssl._create_default_https_context = ssl._create_unverified_context
+ 
 # --- CONFIGURAÇÕES DA API ---
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 PASTA_CSV_ID = '1r6DtkBXm7TZyBOKnwE4tG_-j02N5V5VX'                
 PASTA_XLSX_ID = '13ifqsQjGl2_M-VoOxTMtJI0JvIsDrwhy'
 
-def autenticar_drive():
-    creds = None
-    # O arquivo token.pickle salva seu login para não pedir toda hora
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
-            
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            
-            # lê o dicionário dos secrets do Streamlit
-           # Carrega as configurações diretamente do segredo que você colou
-            client_config = {"web": st.secrets["google_oauth_client"]}
-            
-            # Cria o fluxo de autenticação usando o dicionário, não o arquivo
-            flow = InstalledAppFlow.from_client_config(client_config, SCOPES)                  
+from google_auth_oauthlib.flow import InstalledAppFlow
+import streamlit as st
 
-            # Isso abrirá uma aba no seu navegador para você logar na sua conta de 200GB
-            creds = flow.run_local_server(port=0)
+def autenticar_drive():
+    # Escopos para acessar o Drive
+    SCOPES = ['https://www.googleapis.com/auth/drive.file']
+    
+    # Montamos a configuração a partir do st.secrets
+    client_config = {"web": st.secrets["google_oauth_client"]}
+    
+    try:
+        flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
         
+        # Usamos a porta 8080 para evitar conflito com o Streamlit (8501)
+        creds = flow.run_local_server(
+            port=8080, 
+            open_browser=False,
+            authorization_prompt_message="COPIE ESTE LINK: {url}"
+        )
+        
+        # SALVAMENTO FORÇADO
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
+        st.success("Arquivo token.pickle criado com sucesso! Reinicie o app.")
 
-    return build('drive', 'v3', credentials=creds)
+    except Exception as e:
+        st.error(f"Erro detalhado: {e}")
+    
+    return creds
 
 def upload_para_drive(service, nome_arquivo, conteudo, pasta_id, mimetype):
     try:
