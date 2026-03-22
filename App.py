@@ -17,8 +17,10 @@ uploaded_files = st.file_uploader(
 
 if uploaded_files:
 
-    output = StringIO()
-    writer = csv.writer(output, quoting=csv.QUOTE_ALL, delimiter=',')
+    #output = StringIO()
+    output = StringIO(newline='')
+
+    writer = csv.writer(output, quoting=csv.QUOTE_ALL, delimiter=';')
 
     # Cabeçalho (igual ao seu)
     lista_cabecalho = [
@@ -159,14 +161,22 @@ if uploaded_files:
 
     # CSV final
     csv_string = output.getvalue()
-    csv_bytes = csv_string.encode("utf-8")
+    #csv_bytes = csv_string.encode("utf-8")
+    csv_bytes = csv_string.encode("utf-8-sig")
 
     st.success(f"✅ Total de boletos extraídos: {total_boletos}")
 
     # 📥 BOTÃO DOWNLOAD
+    # st.download_button(
+    #     label="📥 Baixar CSV",
+    #     data=csv_bytes,
+    #     file_name="relatorio_coelba.csv",
+    #     mime="text/csv"
+    # )
+
     st.download_button(
         label="📥 Baixar CSV",
         data=csv_bytes,
         file_name="relatorio_coelba.csv",
-        mime="text/csv"
+        mime="text/csv; charset=utf-8"
     )
