@@ -15,7 +15,7 @@ from funcoes import DadosRetornoCSV  # sua função existente
 
 st.set_page_config(page_title="Extrator COELBA", layout="wide")
 
-st.title("⚡ Extrator Inteligente de Faturas PDF")
+st.title("⚡ Extrator Inteligente de Faturas PDF. Versão: 1.1")
 
 uploaded_files = st.file_uploader(
     "Selecione os PDFs",
