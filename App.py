@@ -15,7 +15,7 @@ from funcoes import DadosRetornoCSV  # sua função existente
 
 st.set_page_config(page_title="Extrator COELBA", layout="wide")
 
-st.title("⚡ Extrator Inteligente de Faturas PDF. Versão: 1.1")
+st.title("⚡ Extrator Inteligente de Faturas PDF. Versão: 1.2")
 
 uploaded_files = st.file_uploader(
     "Selecione os PDFs",
@@ -62,6 +62,7 @@ if uploaded_files:
     writer.writerow(lista_cabecalho)
 
     total_boletos = 0
+    lista_mes_ano_aux_concat = ""
 
     progress = st.progress(0)
     total_files = len(uploaded_files)
@@ -108,10 +109,13 @@ if uploaded_files:
 
              if texto_aux.find('AUTENTICAÇÃO MECÂNICA') > 0:
                lista_mes_ano_aux = DadosRetornoCSV(len('MÊS/ANO'), texto_aux.find('MÊS/ANO'), texto_aux.find('TOTAL A PAGAR(R$)')+1, TEXTO_COMPLETO_AUX) 
+               lista_mes_ano_aux_concat = lista_mes_ano_aux
              elif texto_aux.find('1 /   3') > 0:
                lista_mes_ano_aux = DadosRetornoCSV(len('DATA DA EMISSÃO DA NOTA FISCAL'), texto_aux.find('DATA DA EMISSÃO DA NOTA FISCAL')+4, texto_aux.find('DATA DA APRESENTAÇÃO')+1, TEXTO_COMPLETO_AUX) 
+               lista_mes_ano_aux_concat = DadosRetornoCSV(len('DATA DA EMISSÃO DA NOTA FISCAL'), texto_aux.find('DATA DA EMISSÃO DA NOTA FISCAL'), texto_aux.find('DATA DA APRESENTAÇÃO')+1, TEXTO_COMPLETO_AUX) 
              else:
                lista_mes_ano_aux = DadosRetornoCSV(len('REF:MÊS/ANO'), texto_aux.find('REF:MÊS/ANO')+3, texto_aux.find('VENCIMENTO')+1, TEXTO_COMPLETO_AUX) 
+               lista_mes_ano_aux_concat = DadosRetornoCSV(len('REF:MÊS/ANO'), texto_aux.find('REF:MÊS/ANO'), texto_aux.find('VENCIMENTO')+1, TEXTO_COMPLETO_AUX) 
                verificarMes = DadosRetornoCSV(len('REF:MÊS/ANO'), texto_aux.find('REF:MÊS/ANO'), texto_aux.find('VENCIMENTO')+1, TEXTO_COMPLETO_AUX)
                verificarMesAux = verificarMes[0:2] 
        
@@ -136,7 +140,7 @@ if uploaded_files:
         # print('lista_mes_ano_aux: ', lista_mes_ano_aux)
         # print('lista_mes_ano_aux[2:7]: ', lista_mes_ano_aux[2:7])
         # print('lista_mes_ano_aux: ', lista_mes_ano_aux)
-        # print('verificarMes[0:2]: ', lista_mes_ano_aux[0:2])
+        # print('verificarMes[0:2]: ', lista_mes_ano_aux[0:2])                
 
         if ano2024:
             for page in reader.pages:
@@ -152,7 +156,7 @@ if uploaded_files:
                            
                     TEXTO_COMPLETO = texto 
 
-                    #print('Entrei em 2024.')
+                    # print(TEXTO_COMPLETO)
 
                     try:
                         lista_dados_cliente = DadosRetornoCSV(len('NOME DO CLIENTE:'), texto.find('NOME DO CLIENTE:'), texto.find('ENDEREÇO:'), TEXTO_COMPLETO)
@@ -198,8 +202,25 @@ if uploaded_files:
                         else:
                             lista_num_medidor = ""                                                
 
-                        #textoContaContrato = normalizar_texto(texto)
-                        if texto.find('Conta  Contrato Coletiva nº') > 0:
+                        if texto.find('CÓDIGO DO CLIENTE') > 0 and texto.find('DATAS DE LEITURAS  LEITURA ANTERIOR') > 0:
+                          print('DATAS DE LEITURAS  LEITURA ANTERIOR')
+                          lista_conta_contato = DadosRetornoCSV(len('CÓDIGO DO CLIENTE'), texto.find('CÓDIGO DO CLIENTE'), texto.find('DATAS DE LEITURAS'), TEXTO_COMPLETO)
+                        
+                        # if texto.find(lista_mes_ano_aux_concat + ' CÓDIGO DO CLIENTE') != -1 and texto.find('VENCIMENTO') != -1:                                                   
+                        #     lista_conta_contato = DadosRetornoCSV(len(lista_mes_ano_aux_concat + ' CÓDIGO DO CLIENTE'), texto.find(lista_mes_ano_aux_concat + ' CÓDIGO DO CLIENTE'), texto.find('VENCIMENTO')+12, TEXTO_COMPLETO)
+                            
+                        #     print('VENCIMENTO')  
+                        #     print('lista_conta_contato: ', lista_conta_contato)
+                        #     print(lista_mes_ano_aux_concat + ' CÓDIGO DO CLIENTE')
+                        #     print('len(lista_mes_ano_aux_concat +  CÓDIGO DO CLIENTE)', len(lista_mes_ano_aux_concat + ' CÓDIGO DO CLIENTE'))
+
+                        #     print('texto.find(lista_mes_ano_aux_concat + CÓDIGO DO CLIENTE): ', texto.find(lista_mes_ano_aux_concat + ' CÓDIGO DO CLIENTE') )
+                        #     print('VENCIMENTO+12', texto.find('VENCIMENTO')+12)
+
+                        # elif texto.find('CÓDIGO DO CLIENTE') > 0 and texto.find('DATAS DE LEITURAS  LEITURA ANTERIOR') > 0:
+                        #     print('DATAS DE LEITURAS  LEITURA ANTERIOR')
+                        #     lista_conta_contato = DadosRetornoCSV(len('CÓDIGO DO CLIENTE'), texto.find('DATAS DE LEITURAS  LEITURA ANTERIOR'), texto.find('DATAS DE LEITURAS  LEITURA ANTERIOR'), TEXTO_COMPLETO)
+                        elif texto.find('Conta  Contrato Coletiva nº') > 0:
                             if texto.find('Regras para cobrança da contribuição para o custeio do serviço de') > 0:
                                 lista_conta_contato = DadosRetornoCSV(len('Conta  Contrato Coletiva nº'), texto.find('Conta  Contrato Coletiva nº'), texto.find('Regras para cobrança da contribuição para o custeio do serviço de'), TEXTO_COMPLETO).replace(".", "")                                
                             elif texto.find('A partir de agosto o IBGE realizará o censo demográfico 2022') > 0:
@@ -210,8 +231,8 @@ if uploaded_files:
                             if texto.find('A partir de agosto o IBGE realizará o censo demográfico 2022') > 0:                               
                                 lista_conta_contato = DadosRetornoCSV(len('Conta  Contrato Coletiva nº'), texto.find('Conta  Contrato Coletiva nº'), texto.find('A partir de agosto o IBGE realizará o censo demográfico 2022'), TEXTO_COMPLETO).replace(".", "")
                             else:
-                                lista_conta_contato = DadosRetornoCSV(len('Conta Contrato Coletiva nº'), texto.find('Conta Contrato Coletiva nº'), texto.find('A Iluminação Pública é de responsabilidade da Prefeitura'), TEXTO_COMPLETO).replace(".", "")                                                                                                                                                           
-                                  
+                                lista_conta_contato = DadosRetornoCSV(len('Conta Contrato Coletiva nº'), texto.find('Conta Contrato Coletiva nº'), texto.find('A Iluminação Pública é de responsabilidade da Prefeitura'), TEXTO_COMPLETO).replace(".", "")                                                                                                                                                                                        
+
                         lista_mes_ano = DadosRetornoCSV(len('MÊS/ANO'), texto.find('MÊS/ANO'), texto.find('VENCIMENTO')+1, TEXTO_COMPLETO)
 
                         lista_total_pagar = DadosRetornoCSV(len('TOTAL A PAGAR R$'), texto.find('TOTAL A PAGAR R$'), texto.find('Cadastra-se e receba'), TEXTO_COMPLETO)
